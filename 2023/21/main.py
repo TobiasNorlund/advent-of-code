@@ -1,6 +1,7 @@
 import numpy as np
 from queue import Queue
 import random
+from collections import defaultdict
 
 
 def parse(file):
@@ -18,7 +19,7 @@ def parse(file):
 
     return map, start_pos
 
-def part_1():
+def part_1(target=64):
     file = "input.txt"
     map, start_pos = parse(file)
 
@@ -39,7 +40,7 @@ def part_1():
     while not q.empty():
         x, y, num_steps = q.get()
 
-        if num_steps == 64:
+        if num_steps == target:
             term_pos.add((x, y))
             continue
 
@@ -130,8 +131,9 @@ def get_quadrant_tiles(map, start_steps, target_steps, min_steps_from_start):
     return tot_tiles
 
 
-def part_2_brute():
-    file = "sample.txt"
+def part_2_brute(target=64):
+    file = "input.txt"
+    #file = "sample.txt"
     map, start_pos = parse(file)
     height, width = map.shape
 
@@ -145,16 +147,19 @@ def part_2_brute():
 
     q_put(start_pos + (0, ))
 
-    term_pos = set()
+    term_pos = defaultdict(set)
 
     while not q.empty():
         real_x, real_y, num_steps = q.get()
         x = real_x % width
         y = real_y % height
         
-        if num_steps == 100:
-            term_pos.add((real_x, real_y))
-            continue
+        if num_steps % height == target:
+            term_pos[num_steps].add((real_x, real_y))
+        
+        if num_steps % height == target+1 and num_steps-1 in term_pos:
+            print(num_steps-1, len(term_pos[num_steps-1]))
+            del term_pos[num_steps-1]
 
         # check up
         if (y-1 >= 0 and map[y-1, x]) or (y-1 == -1 and map[height-1, x]):
@@ -172,40 +177,62 @@ def part_2_brute():
         if (x+1 < width and map[y, x+1]) or (x+1 == width and map[y, 0]):
             q_put((real_x+1, real_y, num_steps+1))
 
-    print("upper right quadrant:", sum(1 for x, y in term_pos if x >= width and y < 0))
-    print("upper left quadrant:", sum(1 for x, y in term_pos if x < 0 and y < 0))
-    print("lower right quadrant:", sum(1 for x, y in term_pos if x >= width and y >= height))
-    print("lower left quadrant:", sum(1 for x, y in term_pos if x < 0 and y >= height))
-    print("right", sum(1 for x, y in term_pos if x >= width and 0 <= y < height))
-    print("left", sum(1 for x, y in term_pos if x < 0 and 0 <= y < height))
-    print("up", sum(1 for x, y in term_pos if 0 <= x < width and y < 0))
-    print("down", sum(1 for x, y in term_pos if 0 <= x < width and y >= height))
-
-    #a = np.zeros((height, width), dtype=np.int32)
-    #for y in range(height):
-    #    for x in range(width):
-    #        if (x, y) in term_pos:
-    #            a[y, x] = 1
-    #        #if not map[y, x]:
-    #        #    a[y, x] = -1
-                
-    #center_min_steps = get_minimum_steps(map, (start_pos))
-    #print(center_min_steps)
-                
-    #print(a.sum())
-
-    #print(a)
+    # print("upper right quadrant:", sum(1 for x, y in term_pos if x >= width and y < 0))
+    # print("upper left quadrant:", sum(1 for x, y in term_pos if x < 0 and y < 0))
+    # print("lower right quadrant:", sum(1 for x, y in term_pos if x >= width and y >= height))
+    # print("lower left quadrant:", sum(1 for x, y in term_pos if x < 0 and y >= height))
+    # print("right", sum(1 for x, y in term_pos if x >= width and 0 <= y < height))
+    # print("left", sum(1 for x, y in term_pos if x < 0 and 0 <= y < height))
+    # print("up", sum(1 for x, y in term_pos if 0 <= x < width and y < 0))
+    # print("down", sum(1 for x, y in term_pos if 0 <= x < width and y >= height))
 
     print(len(term_pos)) 
 
 
-def part_2():
+def plot():
+    import numpy as np
+    #import matplotlib.pyplot as plt
+    from numpy.polynomial.polynomial import Polynomial
+
+    # Data points
+    #x = np.array([115, 126, 137, 148, 159, 170, 181, 192, 203])
+    #y = np.array([8734,10502,12432,14524,16778,19194,21772,24512,27414])
+    x = np.array([65, 196, 327, 458], dtype=np.float64)#, 589, 720, 851])
+    y = np.array([3955, 35214, 97607, 191134], dtype=np.float64)
+
+    a = 0
+    fit_x = x[a:a+3]
+    fit_y = y[a:a+3]
+
+    # Fit a quadratic function
+    p = Polynomial.fit(fit_x, fit_y, 2)
+
+    # Get the fitted values
+    y_fitted = p(x)
+
+    # Calculate residuals
+    residuals = y - y_fitted
+    print(residuals)
+    print(p.convert().coef)
+
+    print(p(26501365))
+
+    # Plot the residuals
+    # plt.scatter(x, residuals)
+    # plt.axhline(0, color='red', linestyle='--')
+    # plt.title("Residuals of the Quadratic Fit")
+    # plt.xlabel("x")
+    # plt.ylabel("Residuals")
+    # plt.grid(True)
+    # plt.show()
+
+
+def part_2(target_steps=26501365):
     # Not working yet
     file = "input.txt"
     map, start_pos = parse(file)
     side, _ = map.shape
 
-    target_steps = 26501365
     even_or_odd = target_steps % 2
 
     # start from center - how many minimum steps to get to all tiles?
@@ -300,6 +327,18 @@ def part_2():
     print(tot_tiles)
 
 
+
 if __name__ == "__main__":
-    #part_2_brute()
-    part_2()
+    plot()
+    #part_2_brute(target=65)
+    #part_2()
+    #for n in range(1, 10):
+    #    print(f"{n*131 + 65}:")
+    #    #part_1(target=65*n)
+    #    part_2_brute(target=65*n)
+    #    print()
+
+"""
+
+
+"""
