@@ -17,8 +17,6 @@ for step in range(1, 10000):
     for i in range(len(robs)):
         x, y, vx, vy = robs[i]
 
-        #print(robs[i])
-
         # update 
         robs[i][0] = (x + vx) % w
         robs[i][1] = (y + vy) % h
@@ -31,4 +29,4 @@ for step in range(1, 10000):
 
         plt.imshow(m)
         plt.title(f"After {step} seconds:")
-        plt.show()  # Show the image without blocking execution
+        plt.show()
